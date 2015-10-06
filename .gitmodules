@@ -1,0 +1,3 @@
+[submodule "Assets/Editor/UnityProjectTreeGenerator"]
+	path = Assets/Editor/UnityProjectTreeGenerator
+	url = https://github.com/dkoprowski/UnityProjectTreeGenerator.git
