@@ -409,7 +409,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_Materials:
-  - {fileID: 2100000, guid: 0a0627701df56fb42bf7a85c37777b50, type: 2}
+  - {fileID: 2100000, guid: 408d84a8dd78a774993d029e40951855, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 1
