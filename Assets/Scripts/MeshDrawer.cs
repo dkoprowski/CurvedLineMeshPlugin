@@ -51,10 +51,18 @@ public class MeshDrawer : MonoBehaviour {
     {
         if (Input.GetKey(KeyCode.Mouse0) && Vector3.Distance(GetMouseWorldPoint(Input.mousePosition), LastClick) > stepWidth)
         {
+            var mouseWorldPoint = GetMouseWorldPoint(Input.mousePosition);
+            int steps = (int)Mathf.Floor(Vector3.Distance(mouseWorldPoint, LastClick) / stepWidth);
+            
+            for (int i = 0; i < steps; i++)
+            {
+                var stepStart = Vector3.Lerp(LastClick, mouseWorldPoint, ((i*1f) / steps));
+                var stepFinish = Vector3.Lerp(LastClick, mouseWorldPoint, ((i*1f + 1) / steps));
+                DrawLine(stepStart, stepFinish);
+                DrawCollider(stepStart, stepFinish);
+            }
 
-            DrawLine(LastClick, GetMouseWorldPoint(Input.mousePosition));
-            DrawCollider(LastClick, GetMouseWorldPoint(Input.mousePosition));
-            LastClick = GetMouseWorldPoint(Input.mousePosition);
+            LastClick = mouseWorldPoint;
         }
     }
     private void DrawCollider(Vector3 startPoint, Vector3 finishPoint)
@@ -80,12 +88,20 @@ public class MeshDrawer : MonoBehaviour {
         redVert.transform.position =  RevertInYBasedOnPoint(p.transform.position, redPos);
         orangeVert.transform.position = SetPositionOnCircle(finishPoint, 1f, AngleBetweenTwoPoints(StartPoint.transform.position, finishPoint));
         */
-        
-        if(_mesh.vertices.Length >= 2)
+
+        Vector3 firstNewVerticle = RevertInYBasedOnPoint(finishPoint, SetPositionOnCircle(finishPoint, lineWeight, -AngleBetweenTwoPoints(startPoint, finishPoint)));
+        Vector3 secondNewVerticle = SetPositionOnCircle(finishPoint, lineWeight, AngleBetweenTwoPoints(startPoint, finishPoint));
+
+        if (_mesh.vertices.Length >= 2)
         {
             var lenght = _mesh.vertices.Length;
-            _mesh.vertices[lenght - 1] = Vector3.Lerp(_mesh.vertices[lenght - 1], SetPositionOnCircle(startPoint, lineWeight, AngleBetweenTwoPoints(finishPoint, startPoint)), .5f);
-            _mesh.vertices[lenght - 2] = Vector3.Lerp(_mesh.vertices[lenght - 2], RevertInYBasedOnPoint(startPoint, SetPositionOnCircle(startPoint, lineWeight, -AngleBetweenTwoPoints(finishPoint, startPoint))), .5f);
+
+            var copyOfVertices = _mesh.vertices;
+
+            copyOfVertices[lenght - 1] = Vector3.Lerp(_mesh.vertices[lenght - 1], secondNewVerticle,.5f);
+            copyOfVertices[lenght - 2] = Vector3.Lerp(_mesh.vertices[lenght - 2], firstNewVerticle, .5f);
+
+            _mesh.vertices = copyOfVertices;
         }
 
         //verts
@@ -97,13 +113,24 @@ public class MeshDrawer : MonoBehaviour {
        //     SetPositionOnCircle(startPoint, .2f, AngleBetweenTwoPoints(finishPoint, startPoint)),
        //     RevertInYBasedOnPoint(startPoint, SetPositionOnCircle(startPoint, .2f, -AngleBetweenTwoPoints(finishPoint, startPoint))),
 
-            RevertInYBasedOnPoint(finishPoint, SetPositionOnCircle(finishPoint, lineWeight, -AngleBetweenTwoPoints(startPoint, finishPoint))),
-            SetPositionOnCircle(finishPoint, lineWeight, AngleBetweenTwoPoints(startPoint, finishPoint))
             //new Vector3(finishPoint.x ,finishPoint.y -(height/2f),finishPoint.z),
             //new Vector3(finishPoint.x, finishPoint.y + (height/2f),finishPoint.z)
-
+            firstNewVerticle,
+            secondNewVerticle
         };
         _mesh.vertices = AddArrays<Vector3>(_mesh.vertices, verts);
+
+        //normals
+        //Vector3[] normals = new Vector3[]
+        //{
+        //    new Vector3(0,0,-1),
+        //    new Vector3(0,0,-1)
+        //};
+        if (_mesh.normals.Length > 1)
+        {
+            _mesh.normals[_mesh.normals.Length - 1] = new Vector3(0, 0, -1);
+            _mesh.normals[_mesh.normals.Length - 2] = new Vector3(0, 0, -1);
+        }
 
         //tris
 
@@ -113,24 +140,14 @@ public class MeshDrawer : MonoBehaviour {
             int[] tris = new int[]
             {
             vertLenght-4,vertLenght-3,vertLenght-2,
-            vertLenght-2,vertLenght-3,vertLenght-1,
+            vertLenght-2,vertLenght-3,vertLenght-1
 
-            vertLenght-2,vertLenght-4,vertLenght-2,
-            vertLenght-2,vertLenght-1,vertLenght-3
+          //  vertLenght-2,vertLenght-4,vertLenght-2,
+          //  vertLenght-2,vertLenght-1,vertLenght-3
             };
             _mesh.triangles = AddArrays<int>(_mesh.triangles, tris);
         }
-        //normals
-        Vector3[] normals = new Vector3[]
-        {
-            -Vector3.forward,
-            -Vector3.forward,
-            -Vector3.forward,
-            -Vector3.forward
-        };
-        //uvs
 
-        //_mesh.normals = AddArrays<Vector3>(_mesh.normals, normals);
 
         _mesh.RecalculateBounds();
         _mesh.RecalculateNormals();

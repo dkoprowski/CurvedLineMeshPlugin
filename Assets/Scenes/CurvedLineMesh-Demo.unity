@@ -441,7 +441,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 917f8cb8eed990d40af56611a0073535, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stepWidth: .300000012
+  stepWidth: .100000001
   lineWeight: .100000001
   StartPoint: {fileID: 966038577}
   FinishPoint: {fileID: 0}
