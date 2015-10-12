@@ -10,23 +10,11 @@ public class MeshDrawer : MonoBehaviour {
     public float stepWidth;
     public float lineWeight;
 
-    public Transform StartPoint;
-    public Transform FinishPoint;
-    public Transform ThirdPoint;
-
-    public GameObject VertPrefab;
-    public GameObject Vert2Prefab;
-    public GameObject PointPrefab;
-
     public GameObject CollidersParent;
     public Vector3 LastClick;
     private void Start()
     {
         GenerateMesh();
-
-        //DrawLine(StartPoint.position, FinishPoint.position);
-        //DrawLine(FinishPoint.position, ThirdPoint.position);
-
     }
 
     private void Update()
@@ -78,16 +66,6 @@ public class MeshDrawer : MonoBehaviour {
     }
     private void DrawLine(Vector3 startPoint, Vector3 finishPoint)
     {
-        
-        var p =Instantiate(PointPrefab);
-        p.transform.position = startPoint;/*
-        var redVert = Instantiate(VertPrefab);
-        var orangeVert = Instantiate(Vert2Prefab);
-
-        var redPos = SetPositionOnCircle(finishPoint, 1f, -AngleBetweenTwoPoints(StartPoint.transform.position, finishPoint));
-        redVert.transform.position =  RevertInYBasedOnPoint(p.transform.position, redPos);
-        orangeVert.transform.position = SetPositionOnCircle(finishPoint, 1f, AngleBetweenTwoPoints(StartPoint.transform.position, finishPoint));
-        */
 
         Vector3 firstNewVerticle = RevertInYBasedOnPoint(finishPoint, SetPositionOnCircle(finishPoint, lineWeight, -AngleBetweenTwoPoints(startPoint, finishPoint)));
         Vector3 secondNewVerticle = SetPositionOnCircle(finishPoint, lineWeight, AngleBetweenTwoPoints(startPoint, finishPoint));
@@ -98,7 +76,7 @@ public class MeshDrawer : MonoBehaviour {
 
             var copyOfVertices = _mesh.vertices;
 
-            copyOfVertices[lenght - 1] = Vector3.Lerp(_mesh.vertices[lenght - 1], secondNewVerticle,.5f);
+            copyOfVertices[lenght - 1] = Vector3.Lerp(_mesh.vertices[lenght - 1], secondNewVerticle, .5f);
             copyOfVertices[lenght - 2] = Vector3.Lerp(_mesh.vertices[lenght - 2], firstNewVerticle, .5f);
 
             _mesh.vertices = copyOfVertices;
@@ -107,25 +85,12 @@ public class MeshDrawer : MonoBehaviour {
         //verts
         Vector3[] verts = new Vector3[]
         {
-           // new Vector3(startPoint.x ,startPoint.y - (height/2f),startPoint.z),
-           // new Vector3(startPoint.x , startPoint.y + (height/2f),startPoint.z),
-
-       //     SetPositionOnCircle(startPoint, .2f, AngleBetweenTwoPoints(finishPoint, startPoint)),
-       //     RevertInYBasedOnPoint(startPoint, SetPositionOnCircle(startPoint, .2f, -AngleBetweenTwoPoints(finishPoint, startPoint))),
-
-            //new Vector3(finishPoint.x ,finishPoint.y -(height/2f),finishPoint.z),
-            //new Vector3(finishPoint.x, finishPoint.y + (height/2f),finishPoint.z)
             firstNewVerticle,
             secondNewVerticle
         };
         _mesh.vertices = AddArrays<Vector3>(_mesh.vertices, verts);
 
         //normals
-        //Vector3[] normals = new Vector3[]
-        //{
-        //    new Vector3(0,0,-1),
-        //    new Vector3(0,0,-1)
-        //};
         if (_mesh.normals.Length > 1)
         {
             _mesh.normals[_mesh.normals.Length - 1] = new Vector3(0, 0, -1);
@@ -133,7 +98,6 @@ public class MeshDrawer : MonoBehaviour {
         }
 
         //tris
-
         int vertLenght = _mesh.vertices.Length;
         if (vertLenght >= 4)
         {
@@ -141,19 +105,42 @@ public class MeshDrawer : MonoBehaviour {
             {
             vertLenght-4,vertLenght-3,vertLenght-2,
             vertLenght-2,vertLenght-3,vertLenght-1
-
-          //  vertLenght-2,vertLenght-4,vertLenght-2,
-          //  vertLenght-2,vertLenght-1,vertLenght-3
             };
             _mesh.triangles = AddArrays<int>(_mesh.triangles, tris);
         }
 
+        Vector2[] tempUvs = new Vector2[_mesh.vertices.Length];
+        for (int i = 0; i < _mesh.vertices.Length; i++)
+        {
+            switch (i % 4)
+            {
+                case 0:
+                    tempUvs[i] = new Vector2(0, 0);
+                    break;
+                case 1:
+                    tempUvs[i] = new Vector2(0, 1);
+                    break;
+                case 2:
+                    tempUvs[i] = new Vector2(1, 0);
+                    break;
+                case 3:
+                    tempUvs[i] = new Vector2(1, 1);
+                    break;
+            }
+        }
+        _mesh.SetUVs(0, tempUvs.ToList());
 
         _mesh.RecalculateBounds();
         _mesh.RecalculateNormals();
         
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="centerPoint"></param>
+    /// <param name="baseVector"></param>
+    /// <returns></returns>
     private Vector3 RevertInYBasedOnPoint(Vector3 centerPoint,Vector3 baseVector)
     {
         
@@ -212,24 +199,4 @@ public class MeshDrawer : MonoBehaviour {
 
         return onCirclePosition;
     }
-    //private Vector3 SetPositionOnCircle(Vector3 touchPosition, Vector3 circleMiddle, float radious)
-    //{
-    //    Vector3 onCirclePosition = new Vector3();
-
-    //    float alfa = 180 - AngleBetweenTwoPoints(circleMiddle, touchPosition);
-    //    if (alfa > 270)
-    //    {
-    //        alfa = 360 - alfa;
-    //        alfa *= -1;
-    //    }
-
-    //    float yDifference = radious * Mathf.Sin(alfa * Mathf.Deg2Rad);
-    //    float xDifference = radious * Mathf.Cos(alfa * Mathf.Deg2Rad);
-
-    //    onCirclePosition.x = circleMiddle.x - xDifference;
-
-    //    onCirclePosition.y = circleMiddle.y + yDifference;
-
-    //    return onCirclePosition;
-    //}
 }
