@@ -4,22 +4,37 @@ using System.Collections;
 using System.Collections.Generic;
 [RequireComponent(typeof(MeshFilter))]
 public class MeshDrawer : MonoBehaviour {
-
+    public bool DebugShowVerts;
     private MeshFilter _mf;
-    Mesh _mesh;
+    private Mesh _mesh;
     public float stepWidth;
     public float lineWeight;
+    public GameObject MeshLinePrefab;
+    public GameObject VertNr;
 
-    public GameObject CollidersParent;
+    public GameObject ActiveMeshLine;
     public Vector3 LastClick;
+    
     private void Start()
     {
-        GenerateMesh();
+
     }
 
     private void Update()
     {
-        CreateMeshLine();
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            GenerateMesh(GetMouseWorldPoint(Input.mousePosition));
+        }
+        if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            StopDrawing();
+        }
+
+        if (ActiveMeshLine)
+        {
+            CreateMeshLine();
+        }
     }
 
     private Vector3 GetMouseWorldPoint(Vector3 mouseScreenPoint)
@@ -28,16 +43,30 @@ public class MeshDrawer : MonoBehaviour {
         return new Vector3(worldPoint.x, worldPoint.y, 0);
     }
 
-    private void GenerateMesh()
+    private void GenerateMesh(Vector3 lastClick)
     {
-        _mf = GetComponent<MeshFilter>();
+        ActiveMeshLine = Instantiate(MeshLinePrefab) as GameObject;
+        ActiveMeshLine.transform.SetParent(transform);
+        _mf = ActiveMeshLine.GetComponent<MeshFilter>();
         _mesh = new Mesh();
         _mf.mesh = _mesh;
+        LastClick = lastClick;
+    }
 
+    private void StopDrawing()
+    {
+        var vertPoints2D = new List<Vector2>();
+        for (int i = 0; i < _mesh.vertexCount; i++)
+        {
+            vertPoints2D.Add(new Vector2(_mesh.vertices[i].x, _mesh.vertices[i].y));
+        }
+        DrawCollider(vertPoints2D);
+
+        ActiveMeshLine = null;        
     }
     private void CreateMeshLine()
     {
-        if (Input.GetKey(KeyCode.Mouse0) && Vector3.Distance(GetMouseWorldPoint(Input.mousePosition), LastClick) > stepWidth)
+        if (Input.GetKey(KeyCode.Mouse0) && (Vector3.Distance(GetMouseWorldPoint(Input.mousePosition), LastClick) > stepWidth))
         {
             var mouseWorldPoint = GetMouseWorldPoint(Input.mousePosition);
             int steps = (int)Mathf.Floor(Vector3.Distance(mouseWorldPoint, LastClick) / stepWidth);
@@ -47,23 +76,51 @@ public class MeshDrawer : MonoBehaviour {
                 var stepStart = Vector3.Lerp(LastClick, mouseWorldPoint, ((i*1f) / steps));
                 var stepFinish = Vector3.Lerp(LastClick, mouseWorldPoint, ((i*1f + 1) / steps));
                 DrawLine(stepStart, stepFinish);
-                DrawCollider(stepStart, stepFinish);
+              //  DrawCollider(stepStart, stepFinish);
             }
 
             LastClick = mouseWorldPoint;
         }
     }
-    private void DrawCollider(Vector3 startPoint, Vector3 finishPoint)
-    {
-        var colliderGo = new GameObject("BoxCollider2D", typeof(BoxCollider2D));
-        colliderGo.transform.SetParent(CollidersParent.transform);
 
-        colliderGo.transform.position = Vector2.Lerp(startPoint, finishPoint, .5f);
-        colliderGo.transform.localEulerAngles = new Vector3(colliderGo.transform.localEulerAngles.x, colliderGo.transform.localEulerAngles.y,
-            AngleBetweenTwoPoints(startPoint, finishPoint));
-        var collider = colliderGo.GetComponent<BoxCollider2D>();
-        collider.size = new Vector2(Vector2.Distance(startPoint, finishPoint), lineWeight * 2);
+    private void DrawCollider(List<Vector2> points)
+    {
+        var colliderGo = new GameObject("PolygonCollider2D", typeof(PolygonCollider2D));
+
+        colliderGo.transform.SetParent(ActiveMeshLine.transform);
+
+        colliderGo.transform.position = ActiveMeshLine.transform.position;
+
+        if (DebugShowVerts)
+        {
+            //debug
+            for (int i = 0; i < points.Count; i++)
+            {
+                var v = Instantiate(VertNr) as GameObject;
+                v.GetComponentInChildren<TextMesh>().text = i.ToString();
+                v.transform.position = points[i];
+            }
+        }
+
+
+        var collider = colliderGo.GetComponent<PolygonCollider2D>();
+
+        var evenVerts = new List<Vector2>();
+        var oddVerts = new List<Vector2>();
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            if (i % 2 == 0)
+                evenVerts.Add(points[i]);
+            else
+                oddVerts.Add(points[i]);
+        }
+        evenVerts.Reverse();
+
+        var sortedpoints = oddVerts.Concat(evenVerts).ToArray();
+        collider.SetPath(0, sortedpoints);
     }
+
     private void DrawLine(Vector3 startPoint, Vector3 finishPoint)
     {
 
