@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-[RequireComponent(typeof(MeshFilter))]
+
 public class MeshDrawer : MonoBehaviour {
     public bool DebugShowVerts;
     private MeshFilter _mf;
