@@ -4,6 +4,7 @@ using System.Collections;
 public class DemoController : MonoBehaviour {
     public GameObject BoxPrefab;
     public GameObject CirclePrefab;
+    public GameObject Parent;
     public int seed;
     private System.Random _rnd;
     public void GenerateObjects()
@@ -16,6 +17,9 @@ public class DemoController : MonoBehaviour {
             box.transform.position = new Vector3(_rnd.Next(-8, 8), _rnd.Next(8, 12));
             var circle = Instantiate(CirclePrefab) as GameObject;
             circle.transform.position = new Vector3(_rnd.Next(-8, 8), _rnd.Next(8, 12));
+
+            box.transform.SetParent(Parent.transform);
+            circle.transform.SetParent(Parent.transform);
         }
     }
 }

@@ -62,6 +62,9 @@ public class MeshDrawer : MonoBehaviour {
         }
         DrawCollider(vertPoints2D);
 
+        if (ActiveMeshLine.GetComponent<MeshFilter>().mesh.vertexCount == 0)
+            Destroy(ActiveMeshLine);
+
         ActiveMeshLine = null;        
     }
     private void CreateMeshLine()
@@ -81,6 +84,7 @@ public class MeshDrawer : MonoBehaviour {
 
             LastClick = mouseWorldPoint;
         }
+
     }
 
     private void DrawCollider(List<Vector2> points)
